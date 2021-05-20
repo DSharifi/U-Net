@@ -1,3 +1,15 @@
+# Custom ignore for the project
+
+
+data/train_x/*
+!data/train_x/.keep
+data/train_y/*
+!data/train_y/.keep
+data/test_x/*
+!data/test_x/.keep
+data/test_y/*
+!data/test_y/.keep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
