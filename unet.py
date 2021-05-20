@@ -30,22 +30,18 @@ class Unet(nn.Module):
 
 
     def forward(self, img):
-        print("In: " + str(img.size()))
-
         ########################
         ### Contracting Path ###
         ########################
+        img1 = img.reshape(767, 1022, 3).detach().numpy()
 
         # Down Step 1
         x_1 = self.down_conv_1(img)                 # TODO: Copy & Crop 1
         print("First down: " + str(x_1.size()))
         print("img       : " + str(img.size()))
-        print(img[0][0][0][0])
-        img1 = img[0].detach().reshape((767, 1022, 3)).numpy()
-        img1 = Image.fromarray(img1, 'RGB')
         img2 = x_1[0][24].detach().reshape((763, 1018)).numpy()
-    
-        plot_imgs(img1, img2)
+
+        # plot_imgs(img1, img2)
         x_2 = self.maxPool(x_1)
         print("First maxPool: " + str(x_2.size()))
 
@@ -64,6 +60,9 @@ class Unet(nn.Module):
         # "Horizontal" Step
         x_9 = self.down_conv_5(x_8)
         print("Last Contraction: " + str(x_9.size()))
+        img2 = x_1[0][24].detach().reshape((763, 1018)).numpy()
+
+        plot_imgs(img1, img2)
 
         ########################
         #### Expanding Path ####
