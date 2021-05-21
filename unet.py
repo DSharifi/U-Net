@@ -29,7 +29,16 @@ class Unet(nn.Module):
 
         # NOTE: Maybe use stride=2  but it is not specified in architecture.
         # NOTE: https://discuss.pytorch.org/t/torch-nn-convtranspose2d-vs-torch-nn-upsample/30574
-        self.up_conv_1 = nn.ConvTranspose2d(1024, 512, 2)
+        #
+        # UP CONV
+        self.up_1 = nn.ConvTranspose2d(1024, 512, kernel_size=2)
+        self.up_conv_1 = twoConvs(1024, 512)
+        self.up_2 = nn.ConvTranspose2d(512, 256, kernel_size=2)
+        self.up_conv_2 = twoConvs(512, 256)
+        self.up_3 = nn.ConvTranspose2d(256, 128, kernel_size=2)
+        self.up_conv_3 = twoConvs(256, 128)
+        self.up_4 = nn.ConvTranspose2d(128, 64, kernel_size=2)
+        self.up_conv_4 = twoConvs(128, 64)
 
 
 
@@ -37,17 +46,15 @@ class Unet(nn.Module):
         ########################
         ### Contracting Path ###
         ########################
+
         # TODO: Remove below
         img1 = img.reshape(767, 1022, 3).detach().numpy()
 
         # Down Step 1
         x_1 = self.down_conv_1(img)                 # TODO: Copy & Crop 1
-        print("First down: " + str(x_1.size()))
-        print("img       : " + str(img.size()))
 
         # plot_imgs(img1, img2)
         x_2 = self.maxPool(x_1)
-        print("First maxPool: " + str(x_2.size()))
 
         # Down Step 2
         x_3 = self.down_conv_2(x_2)                 # TODO: Copy & Crop 2
@@ -63,19 +70,51 @@ class Unet(nn.Module):
 
         # "Horizontal" Step
         x_9 = self.down_conv_5(x_8)
-        print("Last Contraction: " + str(x_9.size()))
 
         ########################
         #### Expanding Path ####
         ########################
-        x_10 = self.up_conv_1(x_9)
-        print("x_7: " + str(x_7.size()))
-        print("x_10 " + str(x_10.size()))
-        x_7_c = crop_feature_map(x_7, x_10.size()[2], x_10.size()[3])
-        print("x_7_c: " + str(x_7_c.size()))
+        x_10 = self.up_1(x_9)
+        print()
+        print("x_10: " + str(x_10.size()))
+        print("x_7 : " + str(x_7.size()))
+        x_7_crop = crop_feature_map(x_7, x_10.size()[2], x_10.size()[3])
+        y_1 = torch.cat([x_7_crop, x_10], 1)
+        x_11 = self.up_conv_1(y_1)
+        print("x_11: " + str(x_10.size()))
+        print()
+    
+        x_12 = self.up_2(x_11)
+        print()
+        print("x_12: " + str(x_12.size()))
+        x_5_crop = crop_feature_map(x_5, x_12.size()[2], x_12.size()[3])
+        y_2 = torch.cat([x_5_crop, x_12], 1)
+        x_13 = self.up_conv_2(y_2)
+        print("x_13: " + str(x_13.size()))
+        print()
+
+        x_14 = self.up_3(x_13)
+        print()
+        print("x_14: " + str(x_14.size()))
+        x_3_crop = crop_feature_map(x_3, x_14.size()[2], x_14.size()[3])
+        y_3 = torch.cat([x_3_crop, x_14], 1)
+        x_15 = self.up_conv_3(y_3)
+        print("x_15: " + str(x_15.size()))
+        print()
+
+        x_16 = self.up_4(x_15)
+        print()
+        print("x_16: " + str(x_16.size()))
+        x_1_crop = crop_feature_map(x_1, x_16.size()[2], x_16.size()[3])
+        y_4 = torch.cat([x_1_crop, x_16], 1)
+        x_17 = self.up_conv_4(y_4)
+        print("x_17: " + str(x_17.size()))
+        print()
+
+        plot_imgs(img1, img1)
 
 
-        return x_10
+        return x_17
 
 
 if __name__ == "__main__":

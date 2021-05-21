@@ -14,7 +14,7 @@ def crop_feature_map(tensor, target_height, target_width):
     from_y, to_y = y_margin, curr_height - y_margin
     from_x, to_x = x_margin, curr_width - x_margin
 
-    if target_height < to_y - from_x:
+    if target_height < to_y - from_y:
         to_y -= 1
     if target_width < to_x - from_x:
         to_x -= 1
