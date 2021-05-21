@@ -15,6 +15,7 @@ class Unet(nn.Module):
 
         # From the paper "2x2 max pooling operation with 2 stride"
         self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.n_channels = in_channels
 
         # From the paper, each of the bellow:
         # 1. 3x3 unpadded convolution
@@ -50,7 +51,6 @@ class Unet(nn.Module):
         ########################
 
         # TODO: Remove below
-        img1 = img.reshape(767, 1022, 3).detach().numpy()
 
         # Down Step 1
         x_1 = self.down_conv_1(img)                 # TODO: Copy & Crop 1
@@ -97,9 +97,6 @@ class Unet(nn.Module):
         x_17 = self.up_conv_4(y_4)
 
         y_final = self.output(x_17)
-        print("y_final: " + str(y_final.size()) + " (size)")
-
-        plot_imgs(img1, y_final[0][0].detach().numpy())
 
 
         return y_final
