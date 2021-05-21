@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 
-from helpers import plot_imgs
+from helpers import plot_imgs, crop_feature_map
 from unet_parts import twoConvs
 from image_processor import preprocess_image
 
@@ -27,19 +27,23 @@ class Unet(nn.Module):
         self.down_conv_4 = twoConvs(256, 512)
         self.down_conv_5 = twoConvs(512, 1024)
 
+        # NOTE: Maybe use stride=2  but it is not specified in architecture.
+        # NOTE: https://discuss.pytorch.org/t/torch-nn-convtranspose2d-vs-torch-nn-upsample/30574
+        self.up_conv_1 = nn.ConvTranspose2d(1024, 512, 2)
+
 
 
     def forward(self, img):
         ########################
         ### Contracting Path ###
         ########################
+        # TODO: Remove below
         img1 = img.reshape(767, 1022, 3).detach().numpy()
 
         # Down Step 1
         x_1 = self.down_conv_1(img)                 # TODO: Copy & Crop 1
         print("First down: " + str(x_1.size()))
         print("img       : " + str(img.size()))
-        img2 = x_1[0][24].detach().reshape((763, 1018)).numpy()
 
         # plot_imgs(img1, img2)
         x_2 = self.maxPool(x_1)
@@ -60,17 +64,18 @@ class Unet(nn.Module):
         # "Horizontal" Step
         x_9 = self.down_conv_5(x_8)
         print("Last Contraction: " + str(x_9.size()))
-        img2 = x_1[0][24].detach().reshape((763, 1018)).numpy()
-
-        plot_imgs(img1, img2)
 
         ########################
         #### Expanding Path ####
         ########################
+        x_10 = self.up_conv_1(x_9)
+        print("x_7: " + str(x_7.size()))
+        print("x_10 " + str(x_10.size()))
+        x_7_c = crop_feature_map(x_7, x_10.size()[2], x_10.size()[3])
+        print("x_7_c: " + str(x_7_c.size()))
 
-        # TODO
 
-        return x_9
+        return x_10
 
 
 if __name__ == "__main__":
@@ -83,7 +88,10 @@ if __name__ == "__main__":
 
     model = Unet()
     res = model(img_1)
+
     print("Output Img: " + str(res.shape))
+
+    exit()
 
     # Prpare result img
     res = torch.reshape(res, (64*56, 16*34))

@@ -35,3 +35,4 @@ def preprocess_image(img, scale=1.0, channels=3):
     img = torch.from_numpy(img).type(torch.FloatTensor)
 
     return img
+
