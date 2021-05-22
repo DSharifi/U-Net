@@ -1,5 +1,5 @@
 numpy
 matplotlib
 scikit-learn
-pytorch
+torch
 jupyterlab

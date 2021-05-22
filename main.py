@@ -23,8 +23,8 @@ from torchvision.utils import save_image
 
 
 
-dir_img = 'data/train_x/'
-dir_mask = 'data/train_y/'
+dir_img = 'data/ISBI2016_ISIC_Part1_Training_Data/'
+dir_mask = 'data/ISBI2016_ISIC_Part1_Training_GroundTruth/'
 dir_checkpoint = 'checkpoints/'
 
 
@@ -121,6 +121,8 @@ def train_net(net,
                     writer.add_images('images', imgs, global_step)
                     writer.add_images('masks/true', true_masks, global_step)
                     writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
+                
+                torch.cuda.empty_cache()
 
         if save_cp:
             try:
