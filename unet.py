@@ -78,14 +78,14 @@ class Unet(nn.Module):
         #### Expanding Path ####
         ########################
 
-        print("Before first up: ",x_9.size())
+        #print("Before first up: ",x_9.size())
         x_10 = self.up_1(x_9)
-        print("After transpose2D: ",x_10.size())
+        #print("After transpose2D: ",x_10.size())
         x_7_crop = crop_feature_map(x_7, x_10.size()[2], x_10.size()[3])
         y_1 = torch.cat([x_7_crop, x_10], 1)
-        print("After copy and crop: ",y_1.size())
+        #print("After copy and crop: ",y_1.size())
         x_11 = self.up_conv_1(y_1)
-        print("After twoConv(kernel=3x3): ",x_11.size())
+        #print("After twoConv(kernel=3x3): ",x_11.size())
 
         x_12 = self.up_2(x_11)
         x_5_crop = crop_feature_map(x_5, x_12.size()[2], x_12.size()[3])
