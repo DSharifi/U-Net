@@ -45,6 +45,7 @@ class Unet(nn.Module):
 
 
 
+
     def forward(self, img):
         ########################
         ### Contracting Path ###
@@ -76,11 +77,16 @@ class Unet(nn.Module):
         ########################
         #### Expanding Path ####
         ########################
+
+        print("Before first up: ",x_9.size())
         x_10 = self.up_1(x_9)
+        print("After transpose2D: ",x_10.size())
         x_7_crop = crop_feature_map(x_7, x_10.size()[2], x_10.size()[3])
         y_1 = torch.cat([x_7_crop, x_10], 1)
+        print("After copy and crop: ",y_1.size())
         x_11 = self.up_conv_1(y_1)
-    
+        print("After twoConv(kernel=3x3): ",x_11.size())
+
         x_12 = self.up_2(x_11)
         x_5_crop = crop_feature_map(x_5, x_12.size()[2], x_12.size()[3])
         y_2 = torch.cat([x_5_crop, x_12], 1)
@@ -99,6 +105,8 @@ class Unet(nn.Module):
         y_final = self.output(x_17)
 
 
+
+
         return y_final
 
 
@@ -112,3 +120,6 @@ if __name__ == "__main__":
 
     model = Unet()
     res = model(img_1)
+
+    print(img_1.size())
+    print(res.size())
