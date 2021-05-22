@@ -19,6 +19,8 @@ from helpers import BasicDataset
 
 from PIL import Image
 from image_processor import preprocess_image
+from torchvision.utils import save_image
+
 
 
 dir_img = 'data/train_x/'
@@ -62,7 +64,7 @@ def train_net(net,
 
     criterion = nn.BCEWithLogitsLoss()
 
-    # Uncomment if output classes 2 or greater
+    # Alternative loss, better iwht more classes
     #criterion = nn.CrossEntropyLoss()
 
 
@@ -85,6 +87,12 @@ def train_net(net,
                 true_masks = true_masks.to(device=device, dtype=mask_type)
 
                 masks_pred = net(imgs)
+
+                #print("Input size: ",imgs.size())
+                #print("Predicted mask size: ",masks_pred.size())
+                #print("True mask size: ", true_masks.size())
+
+
                 loss = criterion(masks_pred, true_masks)
                 epoch_loss += loss.item()
                 writer.add_scalar('Loss/train', loss.item(), global_step)
