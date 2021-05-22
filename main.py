@@ -122,10 +122,6 @@ def train_net(net,
                     writer.add_images('masks/true', true_masks, global_step)
                     writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
 
-                # Empty Cache of cuda
-                torch.cuda.empty_cache()
-
-
         if save_cp:
             try:
                 os.mkdir(dir_checkpoint)
