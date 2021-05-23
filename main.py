@@ -155,7 +155,7 @@ def get_args():
                         help='Downscaling factor of the images')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
-    parser.add_argument('-p', '--padding', dest='padding', type=str, default=False,
+    parser.add_argument('-p', '--padding', dest='padding', type=bool, default=True,
                         help='Add padding in the convolutions')
 
     return parser.parse_args()
@@ -175,9 +175,8 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
 
-    padding = bool(args.padding)
     # Loading Network
-    net = Unet(addPadding=padding)
+    net = Unet(addPadding=args.padding)
 
     # Loading saved model if defined
     if args.load:
