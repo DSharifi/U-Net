@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from torch import optim
 
+
 from tqdm import tqdm
 from eval import eval_net
 
@@ -20,11 +21,16 @@ from helpers import BasicDataset
 from PIL import Image
 from image_processor import preprocess_image
 from torchvision.utils import save_image
+import torch.nn.functional as F
 
 
 
-dir_img = 'data/ISBI2016_ISIC_Part1_Training_Data/'
-dir_mask = 'data/ISBI2016_ISIC_Part1_Training_GroundTruth/'
+#dir_img = 'data/ISBI2016_ISIC_Part1_Training_Data/'
+#dir_mask = 'data/ISBI2016_ISIC_Part1_Training_GroundTruth/'
+
+dir_img = 'data/train_x/'
+dir_mask = 'data/train_y/'
+
 dir_checkpoint = 'checkpoints/'
 
 
@@ -35,7 +41,8 @@ def train_net(net,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,
-              img_scale=0.5):
+              img_scale=0.5,
+              cropping=False):
 
     dataset = BasicDataset(dir_img, dir_mask, img_scale, mask_suffix="_Segmentation")
 
@@ -88,10 +95,17 @@ def train_net(net,
 
                 masks_pred = net(imgs)
 
-                #print("Input size: ",imgs.size())
-                #print("Predicted mask size: ",masks_pred.size())
-                #print("True mask size: ", true_masks.size())
+                #Todo Crop output to the same as true_maask
+                print("Input size: ",imgs.size())
+                print("Predicted mask size: ",masks_pred.size())
+                print("True mask size: ", true_masks.size())
 
+                # Cropping image to target size. This works, when we set addPadding = True for all twoConvs
+                if cropping:
+                    output_size = list(true_masks.size())
+                    output_size = [output_size[2],output_size[3]]
+                    masks_pred = F.interpolate(masks_pred, output_size)
+                    print("Predicted mask size after cropping: ",masks_pred.size())
 
                 loss = criterion(masks_pred, true_masks)
                 epoch_loss += loss.item()
@@ -121,8 +135,9 @@ def train_net(net,
                     writer.add_images('images', imgs, global_step)
                     writer.add_images('masks/true', true_masks, global_step)
                     writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
-                
-                torch.cuda.empty_cache()
+
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
 
         if save_cp:
             try:
@@ -151,6 +166,8 @@ def get_args():
                         help='Downscaling factor of the images')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
+    parser.add_argument('-p', '--padding', dest='padding', type=str, default=False,
+                        help='Add padding in the convolutions')
 
     return parser.parse_args()
 
@@ -163,8 +180,9 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
 
+    padding = bool(args.padding)
     # Loading Network
-    net = Unet()
+    net = Unet(addPadding=padding)
 
     # Loading saved model if defined
     if args.load:
@@ -184,7 +202,8 @@ if __name__ == '__main__':
                   lr=args.lr,
                   device=device,
                   img_scale=args.scale,
-                  val_percent=args.val / 100)
+                  val_percent=args.val / 100,
+                  cropping=padding)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')
