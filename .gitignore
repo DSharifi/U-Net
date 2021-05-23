@@ -13,6 +13,9 @@ data/test_x/*
 data/test_y/*
 !data/test_y/.keep
 
+/output/*
+!/output/.keep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
