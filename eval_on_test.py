@@ -64,10 +64,11 @@ def run_predictions(args):
                                args.mask_directory)
     loader = DataLoader(dataset, device=device)
     
-    net = Unet(addPadding=args.padding, device=device)
+    net = Unet(addPadding=args.padding)
     net.load_state_dict(
         torch.load(args.model_path, map_location=device)
     )
+    net.to(device=device)
     
     eval_net(net, loader, device, desc = 'Testing round', **vars(args))
     
