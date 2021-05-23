@@ -68,5 +68,5 @@ class MelanomiaDataset(Dataset):
         mask = mask / 255
         
         # TODO: Convert mask to IntTensor? (all values are 0, 1)
-        return torch.from_numpy(image).type(torch.FloatTensor),\
-            torch.from_numpy(mask).type(torch.FloatTensor)        
+        return {"image":torch.from_numpy(image).type(torch.FloatTensor),\
+            "mask":torch.from_numpy(mask).type(torch.FloatTensor)}
