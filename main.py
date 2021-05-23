@@ -25,7 +25,6 @@ from helpers import BasicDataset
 from PIL import Image
 from image_processor import preprocess_image
 from torchvision.utils import save_image
-import torch.nn.functional as F
 
 
 
@@ -43,8 +42,7 @@ def train_net(net,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,
-              img_scale=0.5,
-              cropping=False):
+              img_scale=0.5):
 
     dataset = MelanomiaDataset(dir_img, dir_mask, img_scale)
     #dataset = BasicDataset(dir_img,dir_mask,img_scale,mask_suffix="_Segmentation")
@@ -97,12 +95,6 @@ def train_net(net,
                 true_masks = true_masks.to(device=device, dtype=mask_type)
 
                 masks_pred = net(imgs)
-
-                # Cropping image to target size. This works, when we set addPadding = True for all twoConvs
-                if cropping:
-                    output_size = list(true_masks.size())
-                    output_size = [output_size[2],output_size[3]]
-                    masks_pred = F.interpolate(masks_pred, output_size)
 
                 loss = criterion(masks_pred, true_masks)
                 epoch_loss += loss.item()
@@ -205,8 +197,7 @@ if __name__ == '__main__':
                   lr=args.lr,
                   device=device,
                   img_scale=args.scale,
-                  val_percent=args.val / 100,
-                  cropping=padding)
+                  val_percent=args.val / 100)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')

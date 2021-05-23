@@ -7,11 +7,15 @@ import matplotlib.pyplot as plt
 from helpers import plot_imgs, crop_feature_map
 from unet_parts import twoConvs
 from image_processor import preprocess_image
+import torch.nn.functional as F
+
 
 class Unet(nn.Module):
 
     def __init__(self, addPadding=False, in_channels=3,):
         super(Unet, self).__init__()
+
+        self.padding = addPadding
 
         # From the paper "2x2 max pooling operation with 2 stride"
         self.maxPool = nn.MaxPool2d(kernel_size=2, stride=2)
@@ -104,7 +108,11 @@ class Unet(nn.Module):
 
         y_final = self.output(x_17)
 
-
+        # Interpolating image at the end if padding is applied - Necessary to get same output size
+        if self.padding:
+            output_size = list(img.size())
+            output_size = [output_size[2],output_size[3]]
+            y_final = F.interpolate(y_final, output_size)
 
 
         return y_final
