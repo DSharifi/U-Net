@@ -18,6 +18,8 @@ from torch.utils.data import DataLoader, random_split
 
 from melanomia_dataset import MelanomiaDataset
 
+from datetime import datetime
+
 from helpers import BasicDataset
 
 from PIL import Image
@@ -96,17 +98,11 @@ def train_net(net,
 
                 masks_pred = net(imgs)
 
-                #Todo Crop output to the same as true_maask
-                print("Input size: ",imgs.size())
-                print("Predicted mask size: ",masks_pred.size())
-                print("True mask size: ", true_masks.size())
-
                 # Cropping image to target size. This works, when we set addPadding = True for all twoConvs
                 if cropping:
                     output_size = list(true_masks.size())
                     output_size = [output_size[2],output_size[3]]
                     masks_pred = F.interpolate(masks_pred, output_size)
-                    print("Predicted mask size after cropping: ",masks_pred.size())
 
                 loss = criterion(masks_pred, true_masks)
                 epoch_loss += loss.item()
@@ -176,7 +172,13 @@ def get_args():
 if __name__ == '__main__':
 
     # Firering up torch and check for GPU support
+    now = datetime.now()
+    current_time = now.strftime("%Y%m%d_%H_%M_%S")
+    logfile = "./logs/"+current_time+".log"
+
+    logging.basicConfig(filename=logfile, level=logging.DEBUG)
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
     args = get_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
