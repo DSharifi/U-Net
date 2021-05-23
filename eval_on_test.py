@@ -64,11 +64,13 @@ def run_predictions(args):
     loader = DataLoader(dataset)
     
     net = Unet(addPadding=args.padding)
-    net.load_state_dict(
-        torch.load(args.load, map_location=args.model_path)
-    )
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    net.load_state_dict(
+        torch.load(args.model_path, map_location=device)
+    )
+    
     eval_net(net, loader, device, **vars(args))
     
 
