@@ -59,19 +59,17 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def run_predictions(args):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dataset = MelanomiaDataset(args.image_directory,
                                args.mask_directory)
     loader = DataLoader(dataset)
     
     net = Unet(addPadding=args.padding)
-    
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    
     net.load_state_dict(
         torch.load(args.model_path, map_location=device)
     )
     
-    eval_net(net, loader, device, **vars(args))
+    eval_net(net, loader, device, desc = 'Testing round', **vars(args))
     
 
 if __name__ == '__main__':
