@@ -16,6 +16,8 @@ from unet import Unet
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, random_split
 
+from melanomia_dataset import MelanomiaDataset
+
 from helpers import BasicDataset
 
 from PIL import Image
@@ -42,7 +44,8 @@ def train_net(net,
               img_scale=0.5,
               cropping=False):
 
-    dataset = BasicDataset(dir_img, dir_mask, img_scale, mask_suffix="_Segmentation")
+    #dataset = MelanomiaDataset(dir_img, dir_mask, img_scale)
+    dataset = BasicDataset(dir_img,dir_mask,img_scale,mask_suffix="_Segmentation")
 
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
