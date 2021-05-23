@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('-s',
                     '--scale',
                     type=float,
-                    default='',
+                    default='.5',
                     help='Scaling of images')
     
     parser.add_argument('-u',
@@ -59,19 +59,17 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 def run_predictions(args):
-    # os.mkdir(args.output_directory)
-    
     dataset = MelanomiaDataset(args.image_directory,
                                args.mask_directory)
     loader = DataLoader(dataset)
     
     net = Unet(addPadding=args.padding)
-    # net.load_state_dict(
-    #     torch.load(args.load, map_location=args.model_path)
-    # )
+    net.load_state_dict(
+        torch.load(args.load, map_location=args.model_path)
+    )
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    eval_net(net, loader, device, desc = 'Testing dataset', **vars(args))
+    eval_net(net, loader, device, **vars(args))
     
 
 if __name__ == '__main__':
