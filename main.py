@@ -25,11 +25,9 @@ import torch.nn.functional as F
 
 
 
-#dir_img = 'data/ISBI2016_ISIC_Part1_Training_Data/'
-#dir_mask = 'data/ISBI2016_ISIC_Part1_Training_GroundTruth/'
+dir_img = 'data/ISBI2016_ISIC_Part1_Training_Data/'
+dir_mask = 'data/ISBI2016_ISIC_Part1_Training_GroundTruth/'
 
-dir_img = 'data/train_x/'
-dir_mask = 'data/train_y/'
 
 dir_checkpoint = 'checkpoints/'
 
