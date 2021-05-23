@@ -62,7 +62,7 @@ def run_predictions(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dataset = MelanomiaDataset(args.image_directory,
                                args.mask_directory)
-    loader = DataLoader(dataset, device=device)
+    loader = DataLoader(dataset, num_workers=8, pin_memory=True)
     
     net = Unet(addPadding=args.padding)
     net.load_state_dict(
