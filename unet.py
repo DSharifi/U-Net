@@ -10,7 +10,7 @@ from image_processor import preprocess_image
 
 class Unet(nn.Module):
 
-    def __init__(self, in_channels=3):
+    def __init__(self, addPadding=False, in_channels=3,):
         super(Unet, self).__init__()
 
         # From the paper "2x2 max pooling operation with 2 stride"
@@ -22,24 +22,24 @@ class Unet(nn.Module):
         # 2. ReLU
         # 3. 3x3 unpadded convolution
         # 4. ReLU
-        self.down_conv_1 = twoConvs(in_channels, 64)
-        self.down_conv_2 = twoConvs(64, 128)
-        self.down_conv_3 = twoConvs(128, 256)
-        self.down_conv_4 = twoConvs(256, 512)
-        self.down_conv_5 = twoConvs(512, 1024)
+        self.down_conv_1 = twoConvs(in_channels, 64,addPadding)
+        self.down_conv_2 = twoConvs(64, 128,addPadding)
+        self.down_conv_3 = twoConvs(128, 256,addPadding)
+        self.down_conv_4 = twoConvs(256, 512,addPadding)
+        self.down_conv_5 = twoConvs(512, 1024,addPadding)
 
         # NOTE: Maybe use stride=2  but it is not specified in architecture.
         # NOTE: https://discuss.pytorch.org/t/torch-nn-convtranspose2d-vs-torch-nn-upsample/30574
         #
         # UP CONVs
         self.up_1 = nn.ConvTranspose2d(1024, 512, kernel_size=2, stride=2)
-        self.up_conv_1 = twoConvs(1024, 512)
+        self.up_conv_1 = twoConvs(1024, 512,addPadding)
         self.up_2 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
-        self.up_conv_2 = twoConvs(512, 256)
+        self.up_conv_2 = twoConvs(512, 256,addPadding)
         self.up_3 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
-        self.up_conv_3 = twoConvs(256, 128)
+        self.up_conv_3 = twoConvs(256, 128,addPadding)
         self.up_4 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
-        self.up_conv_4 = twoConvs(128, 64)
+        self.up_conv_4 = twoConvs(128, 64,addPadding)
 
         self.output = nn.Conv2d(64, 1, kernel_size=1)
 
