@@ -1,6 +1,8 @@
 # Custom ignore for the project
 
 
+data/*/*
+
 data/train_x/*
 !data/train_x/.keep
 data/train_y/*
