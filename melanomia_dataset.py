@@ -1,7 +1,8 @@
 from os import listdir
 from os.path import join
-from typing import Tuple
+from typing import Dict, Tuple
 import numpy as np
+from numpy.core.numeric import outer
 import torch
 from torch import Tensor
 
@@ -25,7 +26,7 @@ class MelanomiaDataset(Dataset):
     def __len__(self):
         return len(self.images)
     
-    def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
+    def __getitem__(self, idx: int) -> Dict[str, Tensor]:
         """Returns image and mask at given index.
 
         Args:
@@ -38,8 +39,12 @@ class MelanomiaDataset(Dataset):
         mask_path = join(self.mask_directory, self.masks[idx])
         
         with open(image_path) as image, open(mask_path) as mask:
-            return self.scale_file_(image, mask)
+            output = self.scale_file_(image, mask)
         
+        output['id'] = self.images[idx]
+        
+        return output
+    
     def scale_file_(self, image: Image, mask: Image) -> Tuple[Tensor, Tensor]:
         """Takes in image, mask pointer pair and returns
         scaled versions as tensors.
@@ -68,5 +73,5 @@ class MelanomiaDataset(Dataset):
         mask = mask / 255
         
         # TODO: Convert mask to IntTensor? (all values are 0, 1)
-        return {"image":torch.from_numpy(image).type(torch.FloatTensor),\
-            "mask":torch.from_numpy(mask).type(torch.FloatTensor)}
+        return {"image":torch.from_numpy(image).type(torch.FloatTensor),
+                "mask":torch.from_numpy(mask).type(torch.FloatTensor)}
