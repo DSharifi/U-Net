@@ -14,7 +14,7 @@ def eval_net(net, loader, device, **kwargs):
     mask_type = torch.float32
     n_val = len(loader)  # the number of batch
     tot = 0
-    
+
     if 'desc' in kwargs:
         desc = kwargs['desc']
     else:
@@ -32,10 +32,10 @@ def eval_net(net, loader, device, **kwargs):
             pred = torch.sigmoid(mask_pred)
             pred = (pred > 0.5).float()
             tot += dice_coeff(pred, true_masks).item()
-            
+
             if 'output_directory' in kwargs: # save output
                 save_prediction(pred, id, **kwargs)
-                
+
             pbar.update()
 
     net.train()

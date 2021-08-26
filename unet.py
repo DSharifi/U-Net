@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 class Unet(nn.Module):
 
-    def __init__(self, addPadding=False, in_channels=3,):
+    def __init__(self, addPadding, in_channels=3):
         super(Unet, self).__init__()
 
         self.padding = addPadding
