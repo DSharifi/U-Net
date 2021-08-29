@@ -10,29 +10,19 @@ from torch import optim
 
 from tqdm import tqdm
 from eval import eval_net
-
 from unet import Unet
 
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, random_split
 
 from melanomia_dataset import MelanomiaDataset
-
 from datetime import datetime
-
-from helpers import BasicDataset
-
-from PIL import Image
-from image_processor import preprocess_image
-from torchvision.utils import save_image
-
 
 
 dir_img = 'data/ISBI2016_ISIC_Part1_Training_Data/'
 dir_mask = 'data/ISBI2016_ISIC_Part1_Training_GroundTruth/'
 
 
-dir_checkpoint = 'checkpoints/'
 
 
 def train_net(net,
@@ -42,18 +32,24 @@ def train_net(net,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,
-              img_scale=0.5):
+              img_scale=0.5,
+              time='',
+              padding=0):
+
+
+    dir_checkpoint = f'checkpoints/{time}LR_{lr}_BS_{batch_size}_SCALE_{img_scale}_PADDING{padding}'
 
     dataset = MelanomiaDataset(dir_img, dir_mask, img_scale)
-    #dataset = BasicDataset(dir_img,dir_mask,img_scale,mask_suffix="_Segmentation")
 
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
-    train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
 
-    writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
+    train, val = random_split(dataset, [n_train, n_val])
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
+
+    writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}_PADDING{padding}')
+
     global_step = 0
 
     logging.info(f'''Starting training:
@@ -72,62 +68,56 @@ def train_net(net,
 
     criterion = nn.BCEWithLogitsLoss()
 
-    # Alternative loss, better iwht more classes
-    #criterion = nn.CrossEntropyLoss()
-
-
-
     for epoch in range(epochs):
         net.train()
 
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
             for batch in train_loader:
-                imgs = batch['image']
-                true_masks = batch['mask']
-                assert imgs.shape[1] == net.n_channels, \
-                    f'Network has been defined with {net.n_channels} input channels, ' \
-                    f'but loaded images have {imgs.shape[1]} channels. Please check that ' \
-                    'the images are loaded correctly.'
+                image_batch = batch['image'].to(device=device, dtype=torch.float32)
+                mask_batch = batch['mask'].to(device=device, dtype=torch.float32)
 
-                imgs = imgs.to(device=device, dtype=torch.float32)
-                mask_type = torch.float32
-                true_masks = true_masks.to(device=device, dtype=mask_type)
+                predictions = net(image_batch)
 
-                masks_pred = net(imgs)
-
-                loss = criterion(masks_pred, true_masks)
+                loss = criterion(predictions, mask_batch)
                 epoch_loss += loss.item()
+
                 writer.add_scalar('Loss/train', loss.item(), global_step)
+                pbar.set_postfix(**{'loss (epoch)': epoch_loss})
 
-                pbar.set_postfix(**{'loss (batch)': loss.item()})
-
+                # training step
                 optimizer.zero_grad()
                 loss.backward()
                 nn.utils.clip_grad_value_(net.parameters(), 0.1)
                 optimizer.step()
 
-                pbar.update(imgs.shape[0])
+                pbar.update(image_batch.shape[0])
+
                 global_step += 1
+
                 if global_step % (n_train // (10 * batch_size)) == 0:
                     for tag, value in net.named_parameters():
                         tag = tag.replace('.', '/')
                         writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                         writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
-                    val_score = eval_net(net, val_loader, device)
-                    scheduler.step(val_score)
+
                     writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
-
-
-                    logging.info('Validation Dice Coeff: {}'.format(val_score))
-                    writer.add_scalar('Dice/test', val_score, global_step)
-                    writer.add_images('images', imgs, global_step)
-                    writer.add_images('masks/true', true_masks, global_step)
-                    writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
+                    writer.add_images('images', image_batch, global_step)
+                    writer.add_images('masks/true', mask_batch, global_step)
+                    writer.add_images('masks/pred', torch.sigmoid(predictions) > 0.5, global_step)
 
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
 
+
+        # Write the total loss and eval score.
+        val_dice_score, val_loss = eval_net(net, val_loader, device, criterion = criterion)
+
+        writer.add_scalar('Loss/Train Epoch', epoch_loss/n_train, epoch + 1)
+        writer.add_scalar('Loss/Validation Epoch', val_loss, epoch + 1)
+        writer.add_scalar('Dice/Validation', val_dice_score, epoch + 1)
+
+        scheduler.step(epoch_loss)
         if save_cp:
             try:
                 os.mkdir(dir_checkpoint)
@@ -155,7 +145,7 @@ def get_args():
                         help='Downscaling factor of the images')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
-    parser.add_argument('-p', '--padding', dest='padding', type=bool, default=True,
+    parser.add_argument('-p', '--padding', dest='padding', type=int, default=1,
                         help='Add padding in the convolutions')
 
     return parser.parse_args()
@@ -196,7 +186,8 @@ if __name__ == '__main__':
                   lr=args.lr,
                   device=device,
                   img_scale=args.scale,
-                  val_percent=args.val / 100)
+                  val_percent=args.val / 100,
+                  time = current_time)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         logging.info('Saved interrupt')

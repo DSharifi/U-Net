@@ -59,6 +59,9 @@ class MelanomiaDataset(Dataset):
         width, height = image.size
         width, height = int(width*self.scale), int(height*self.scale)
         
+        # width = 224
+        # height = 224
+
         image = image.resize((width, height))
         mask = mask.resize((width, height))
         image, mask = np.array(image), np.array(mask)

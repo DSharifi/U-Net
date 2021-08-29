@@ -4,6 +4,15 @@
 
 data/*/*
 
+predictions/*
+!predictions/.keep
+
+checkpoints/*
+!checkpoints/.keep
+
+runs/*
+!runs/.keep
+
 data/train_x/*
 !data/train_x/.keep
 data/train_y/*

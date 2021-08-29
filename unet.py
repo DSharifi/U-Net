@@ -116,18 +116,3 @@ class Unet(nn.Module):
 
 
         return y_final
-
-
-if __name__ == "__main__":
-    # Tensor shape = (1, #filters, pxWidth, pxHeight)
-
-    img = torch.rand((1, 1, 1022,676))
-
-    img_1 = Image.open("ISIC_0000003.jpg")
-    img_1 = preprocess_image(img_1, scale=1)
-
-    model = Unet()
-    res = model(img_1)
-
-    print(img_1.size())
-    print(res.size())
