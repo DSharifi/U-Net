@@ -5,25 +5,21 @@
 data/*/*
 
 predictions/*
-!predictions/.keep
+!predictions/final_model
+
+!*.keep
 
 checkpoints/*
-!checkpoints/.keep
 
 runs/*
 !runs/.keep
 
 data/train_x/*
-!data/train_x/.keep
 data/train_y/*
-!data/train_y/.keep
 data/test_x/*
-!data/test_x/.keep
 data/test_y/*
-!data/test_y/.keep
 
 /output/*
-!/output/.keep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

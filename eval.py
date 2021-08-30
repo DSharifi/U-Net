@@ -11,24 +11,21 @@ from dice_loss import dice_coeff
 
 from torchvision.utils import save_image
 
+from sklearn.metrics import classification_report
 
-def eval_net(net, loader, device, **kwargs):
+def eval_net(net, loader, device, report = False, **kwargs):
     """Evaluation without the densecrf with the dice coefficient"""
     net.eval()
     mask_type = torch.float32
     n_val = len(loader)  # the number of batch
     tot = 0
 
-    if 'desc' in kwargs:
-        desc = kwargs['desc']
-    else:
-        desc = 'Validation round'
-
     loss = 0
+    
+    predictions = []
+    true_labels = []
 
-    booleanTOT = 0
-
-    with tqdm(total=n_val, desc=desc, unit='batch', leave=False) as pbar:
+    with tqdm(total=n_val, desc=kwargs['desc'] if 'desc' in kwargs else 'Validation Round', unit='batch', leave=False) as pbar:
         for batch in loader:
             imgs, true_masks, id = batch['image'], batch['mask'], batch['id'][0]
             imgs = imgs.to(device=device, dtype=torch.float32)
@@ -64,33 +61,3 @@ def save_prediction(pred, id, **kwargs):
     pred = pred[:,:,:,:]
     output_path = os.path.join(outputDir, f'{id.strip(".jpg")}.png')
     save_image(pred, output_path)
-
-
-# def DSC(prediction: Tensor, ground_truth: Tensor) -> float:
-    
-#     #assert prediction.shape() == ground_truth.shape()
-    
-#     # intersection = 1,1 ; 0,0
-#     # intersection = |set| - |xor|
-#     intersection = prediction.numel() - torch.sum(torch.logical_xor(prediction, ground_truth))
-
-#     numerator   = 2 * intersection
-#     denominator = prediction.numel() + ground_truth.numel()
-
-#     return numerator / denominator
-
-# def booleanDSC(prediction, ground_truth) -> float:
-    
-#     # false_positives = 1,1
-#     true_positives = sum(torch.logical_and(prediction, ground_truth))
-    
-#     # false_positives = 1,0
-#     # false_negative  = 0,1
-#     # XOR             = false_positives + false_negatives
-#     xor = torch.sum(torch.logical_xor(prediction, ground_truth))
-
-#     numerator   = 2 * true_positives
-#     denominator = 2 * true_positives + xor
-    
-    
-#     return numerator / denominator

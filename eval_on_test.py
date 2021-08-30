@@ -1,5 +1,6 @@
 import argparse
 import os
+from test import engine
 
 import torch
 from unet import Unet
@@ -72,8 +73,7 @@ def run_predictions(args):
     )
     net.to(device=device)
     
-    print(eval_net(net, loader, device, desc = 'Testing round', **vars(args)))
-    
+    print(engine(net, loader, device, args.output_directory, 'final_model'))
 
 if __name__ == '__main__':
     args = parse_args()

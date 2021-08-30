@@ -11,8 +11,10 @@ from PIL.Image import open, Image
 
 
 class MelanomiaDataset(Dataset):
-    def __init__(self, image_directory, mask_directory, scale = 1):
+    def __init__(self, image_directory, mask_directory, scale = 1, scale_mask = True):
         self.scale = scale
+
+        self.scale_mask = scale_mask
         
         self.image_directory = image_directory
         self.mask_directory = mask_directory
@@ -59,11 +61,11 @@ class MelanomiaDataset(Dataset):
         width, height = image.size
         width, height = int(width*self.scale), int(height*self.scale)
         
-        # width = 224
-        # height = 224
-
         image = image.resize((width, height))
-        mask = mask.resize((width, height))
+
+        if self.scale_mask:
+            mask = mask.resize((width, height))
+
         image, mask = np.array(image), np.array(mask)
         
         mask = np.expand_dims(mask, axis=2)
