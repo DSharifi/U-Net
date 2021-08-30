@@ -5,7 +5,9 @@
 data/*/*
 
 predictions/*
-!predictions/final_model
+!predictions/*42
+!predictions/Final model*
+
 
 !*.keep
 
